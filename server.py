@@ -69,34 +69,32 @@ def generate_work():
     return random.gauss(1300, 10)
 
 
-"""
+def complete_work():
+    """
     This method simulates the server aspects of the target system. This method
     simulates the processing of requests by generating a random number when invoked. This number
     represents the total number of requests processed by the server at every epoch.
-"""
-
-
-def complete_work():
+    """
     a, b = 20, 3
     return 100 * random.betavariate(a, b)  # mean: a/(a+b); var: ~b/a^2
 
 
 # ============================================================
-"""
-    Method to model the target system
-    This method simulates the expected behavior of the target system used in this
-    assignment. You will use this method to model the target system.
-"""
 
 
 def static_test(traffic):
     """
-    This method simulates the client aspects of the target system. This method
-    simulates work by generating a random number when invoked. This number represents the total
-    number of requests that arrive at the server at every epoch.
+    Method to model the target system
+    This method simulates the expected behavior of the target system used in this
+    assignment. You will use this method to model the target system.
     """
 
     def generate_work():
+        """
+        This method simulates the client aspects of the target system. This method
+        simulates work by generating a random number when invoked. This number represents the total
+        number of requests that arrive at the server at every epoch.
+        """
         return random.gauss(traffic, traffic / 200)
 
     fb.static_test(
@@ -104,12 +102,10 @@ def static_test(traffic):
     )  # max u, steps, trials, timesteps
 
 
-"""
-    Method to simulate the feedback-based system
-"""
-
-
 def closed_loop(n):
+    """
+    Method to simulate the feedback-based system
+    """
     initial_num_servers = n
     target_system = ServerPool(initial_num_servers, complete_work, generate_work)
     # controller = Create controller instance
