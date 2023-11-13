@@ -159,6 +159,35 @@ def closed_loop(n):
     # Invoke closed_loop method in the controller
 
 
+def closed_loop_p(n, k_p, steps, r):
+    """
+
+    Args:
+        n (int): init server num
+        k_p (float):
+        steps (int): number of steps
+        r (float): reference input
+
+    Returns:
+        : TODO
+    """
+    server_num = n
+    target_system = ServerPool(server_num, complete_work, generate_work)
+    completion_rates = []
+    control_input = []
+    y = target_system.work(n)
+    completion_rates.append(y)
+    e = r - y
+    u = n
+    for _ in range(steps):
+        u += fb.p_controller(e, k_p)
+        control_input.append(u)
+        y = target_system.work(u)
+        completion_rates.append(y)
+        e = r - y
+    return completion_rates, control_input
+
+
 # ============================================================
 # Helper Methods
 def plotter():
@@ -257,6 +286,22 @@ def plot_samples(samples):
     plt.show()
 
 
+def plot_result_p(y):
+    # Generate x-values as 1, 2, 3, ...
+    x_values = list(range(1, len(y) + 1))
+
+    # Create a line plot with markers
+    plt.plot(x_values, y, "o-")
+
+    # Add labels and a title
+    plt.xlabel("X Values")
+    plt.ylabel("Y Values")
+    plt.title("Plot of Y Values with Lines")
+
+    # Show the plot
+    plt.show()
+
+
 def model(samples):
     # Sample data (u, y)
     u = [u for u, _ in samples]
@@ -299,6 +344,11 @@ if __name__ == "__main__":
     fb.DT = 1  # Sampling time is set to 1 - Refer to feedback.py
 
     global_time = 0  # To communicate with generate and consume functions
+
+    y, control_inputs = closed_loop_p(5, 8, 100, 0.9)
+
+    plot_result_p(y)
+    plot_result_p(control_inputs)
 
     # consturct sampel and model
     do_sample = False

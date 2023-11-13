@@ -11,6 +11,19 @@ SamplingInterval = None  # Sampling interval - defaults to None, must be set exp
 """
 
 
+def p_controller(e, k_p):
+    """input the error e and K_P, return the control input
+
+    Args:
+        e (float): control error
+        k_p (float): kp
+
+    Returns:
+        int: u
+    """
+    return e * k_p
+
+
 # ============================================================
 # # Input signals
 
@@ -19,6 +32,31 @@ SamplingInterval = None  # Sampling interval - defaults to None, must be set exp
     the code here. You will only invoke the input signal that you 
     finalized, when you submit your code. 
 """
+
+
+def sine_wave_values(lower_bound, upper_bound, num):
+    """
+    This function returns a list of integer values from a sine wave within a specified range.
+
+    Parameters:
+    lower_bound (float): The lower bound of the sine wave.
+    upper_bound (float): The upper bound of the sine wave.
+    num (int): The number of values to calculate.
+
+    Returns:
+    list: A list of integer values from the sine wave.
+    """
+    # Calculate the amplitude and mid-point of the sine wave
+    amplitude = (upper_bound - lower_bound) / 2
+    mid_point = (upper_bound + lower_bound) / 2
+
+    # Generate the sine wave values
+    sine_values = [
+        int(round(amplitude * math.sin(k) + mid_point)) for k in range(1, num + 1)
+    ]
+
+    return sine_values
+
 
 # # ============================================================
 # # Loop functions
@@ -85,34 +123,3 @@ def static_test_sine(target_ctor, ctor_args, upper_bound, lower_bound, repeats):
         result.append((u, y))
 
     return result
-
-
-def sine_wave_values(lower_bound, upper_bound, num):
-    """
-    This function returns a list of integer values from a sine wave within a specified range.
-
-    Parameters:
-    lower_bound (float): The lower bound of the sine wave.
-    upper_bound (float): The upper bound of the sine wave.
-    num (int): The number of values to calculate.
-
-    Returns:
-    list: A list of integer values from the sine wave.
-    """
-    # Calculate the amplitude and mid-point of the sine wave
-    amplitude = (upper_bound - lower_bound) / 2
-    mid_point = (upper_bound + lower_bound) / 2
-
-    # Generate the sine wave values
-    sine_values = [
-        int(round(amplitude * math.sin(k) + mid_point)) for k in range(1, num + 1)
-    ]
-
-    return sine_values
-
-
-def closed_loop():
-    """
-    Your feedback loop code goes here
-    """
-    quit()
