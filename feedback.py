@@ -11,17 +11,42 @@ SamplingInterval = None  # Sampling interval - defaults to None, must be set exp
 """
 
 
-def p_controller(e, k_p):
-    """input the error e and K_P, return the control input
+class p_controller:
+    def __init__(self, kp) -> None:
+        self.kp = kp
 
-    Args:
-        e (float): control error
-        k_p (float): kp
+    def compute(self, e):
+        return e * self.kp
 
-    Returns:
-        int: u
-    """
-    return e * k_p
+
+class pi_controller:
+    def __init__(self, kp, ki):
+        self.kp = kp
+        self.ki = ki
+        self.ui_prev = 0
+
+    def compute(self, e):
+        ui = self.ui_prev + self.ki * e
+        self.ui_prev = ui
+        u = self.kp * e + ui
+        return u
+
+
+class pid_controller:
+    def __init__(self, kp, ki, kd):
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.e_prev = 0
+        self.ui_prev = 0
+
+    def compute(self, e):
+        ui = self.ui_prev + self.ki * e
+        self.ui_prev = ui
+        ud = self.kd * (e - self.e_prev)
+        self.e_prev = e
+        u = self.kp * e + ui + ud
+        return u
 
 
 # ============================================================

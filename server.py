@@ -2,7 +2,8 @@ import math
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-import pickle
+import sys
+
 
 """
     Feedback structure code. You can use multiple source-codes for each of the controllers.
@@ -149,38 +150,32 @@ def sine_static_test(traffic, repeats):
     return samples
 
 
-def closed_loop(n):
-    """
-    Method to simulate the feedback-based system
-    """
-    initial_num_servers = n
-    target_system = ServerPool(initial_num_servers, complete_work, generate_work)
-    # controller = Create controller instance
-    # Invoke closed_loop method in the controller
-
-
-def closed_loop_p(n, k_p, steps, r):
+def closed_loop(n, steps, r, controller):
     """
 
     Args:
         n (int): init server num
-        k_p (float):
         steps (int): number of steps
         r (float): reference input
+        controller
 
     Returns:
         : TODO
     """
     server_num = n
     target_system = ServerPool(server_num, complete_work, generate_work)
+
+    # results
     completion_rates = []
     control_input = []
+
+    # initial run
     y = target_system.work(n)
     completion_rates.append(y)
     e = r - y
-    u = n
+
     for _ in range(steps):
-        u += fb.p_controller(e, k_p)
+        u = controller.compute(e)
         control_input.append(u)
         y = target_system.work(u)
         completion_rates.append(y)
@@ -190,9 +185,76 @@ def closed_loop_p(n, k_p, steps, r):
 
 # ============================================================
 # Helper Methods
-def plotter():
-    # Your plotter code should go here
-    return
+def plotter(y, control_input, label):
+    # # Your plotter code should go here
+    # # Generate x-values as 1, 2, 3, ...
+    x_values = list(range(1, len(y) + 1))
+
+    # # Create a line plot for the first list with a blue color ('b-')
+    # plt.plot(x_values, y, "b-", label="completion rate")
+
+    # # Create a line plot for the second list with a red color ('r-')
+    # plt.plot(x_values, control_input, "r-", label="control input")
+
+    # plt.plot(x_values, control_input, "g-", label="number of servers")
+
+    # # Add labels, a title, and a legend
+    # plt.xlabel("Time steps")
+    # plt.ylabel("completion rate/control input/number of servers")
+    # plt.title(label)
+    # plt.legend()
+
+    # # Show the plot
+    # plt.show()
+
+    # Creating a figure with 3 subplots
+    fig, axs = plt.subplots(3, 1, figsize=(8, 12))
+
+    # Plotting each list on a separate subplot
+    axs[0].plot(x_values, y, "tab:blue")
+    axs[0].set_title("completion rate vs time steps")
+    axs[0].set_xlabel("time steps")
+    axs[0].set_ylabel("completion rate")
+
+    axs[1].plot(x_values, control_input, "tab:orange")
+    axs[1].set_title("control input vs time steps")
+    axs[1].set_xlabel("time steps")
+    axs[1].set_ylabel("control input")
+
+    axs[2].plot(x_values, control_input, "tab:green")
+    axs[2].set_title("number of servers vs time steps")
+    axs[2].set_xlabel("number of servers")
+    axs[2].set_ylabel("time steps")
+
+    fig.suptitle(label, fontsize=16)
+
+    # Adjusting layout for better visibility
+    plt.tight_layout()
+
+    # Display the combined plot with three separate subplots
+    plt.show()
+
+
+def validate_args(args):
+    if len(args) != 5:
+        return None, "Usage: python server.py <k> <N> <T> <C>"
+
+    try:
+        k = int(args[1])
+        N = int(args[2])
+    except ValueError:
+        return None, "Error: <k> and <N> must be integers."
+
+    T = args[3]
+    if T not in ["s", "c"]:
+        return None, "Error: <T> must be 's' or 'c'."
+
+    C = args[4]
+    if C not in ["p", "pi", "pid"]:
+        return None, "Error: <C> must be 'p', 'pi', or 'pid'."
+
+    # If all checks pass, return the arguments
+    return (k, N, T, C), None
 
 
 # If you are using any other helper methods, include them here
@@ -325,33 +387,8 @@ def model(samples):
     return a, b
 
 
-# ============================================================
-
-
-if __name__ == "__main__":
-    """
-    TA will only type "python server.py k N T C"
-
-    k - Number of time steps to simulate
-    N - Number of initial server instances
-    T - Type of test (s, c) - s = static test, c = simulate feedback-based system
-    C - Controller to run (p, pi, pid)
-    p = proportional controller; pi = proportional-integral controller; pid = proportional-integral-derivative controller
-    Note: You must handle any errors in the user input
-    """
-
-    # TODO: what's this DT? nothing used there.
-    fb.DT = 1  # Sampling time is set to 1 - Refer to feedback.py
-
-    global_time = 0  # To communicate with generate and consume functions
-
-    y, control_inputs = closed_loop_p(5, 8, 100, 0.9)
-
-    plot_result_p(y)
-    plot_result_p(control_inputs)
-
+def static_test_modeling(do_sample, do_test):
     # consturct sampel and model
-    do_sample = False
     samples = None
     sample_file_name = "sine_samples.txt"
 
@@ -366,7 +403,6 @@ if __name__ == "__main__":
     a, b = model(samples)
 
     # test model
-    do_test = False
     test_samples = None
     test_sample_file_name = "test_sine_samples.txt"
 
@@ -390,7 +426,60 @@ if __name__ == "__main__":
     test_r2 = r_squared(y_true, y_pred)
     print(f"RMSE: {test_rmse}, r^2: {test_r2}")
 
-    print("haha")
+
+# ============================================================
 
 
-#    closed_loop()
+if __name__ == "__main__":
+    """
+    TA will only type "python server.py k N T C"
+
+    k - Number of time steps to simulate
+    N - Number of initial server instances
+    T - Type of test (s, c) - s = static test, c = simulate feedback-based system
+    C - Controller to run (p, pi, pid)
+    p = proportional controller; pi = proportional-integral controller; pid = proportional-integral-derivative controller
+    Note: You must handle any errors in the user input
+    """
+
+    # TODO: what's this DT? nothing used there.
+    fb.DT = 1  # Sampling time is set to 1 - Refer to feedback.py
+
+    global_time = 0  # To communicate with generate and consume functions
+
+    # handle args
+    args, error_message = validate_args(sys.argv)
+    if error_message:
+        print(error_message)
+        sys.exit(1)
+
+    # Unpack validated arguments
+    k, N, T, C = args
+
+    # k values
+    p_kp = 11
+
+    pi_kp = -4.17
+    pi_ki = 4.2
+
+    pid_kp = -3.25
+    pid_ki = 5.51
+    pid_kd = 1.28
+
+    if T == "s":
+        # static test
+        # TODO: should I use mine? what to plot?
+        static_test_modeling(True, True)
+    else:
+        # feedback system
+        controller = None
+        if C == "p":
+            controller = fb.p_controller(p_kp)
+        elif C == "pi":
+            controller = fb.pi_controller(pi_kp, pi_ki)
+        elif C == "pid":
+            controller = fb.pid_controller(pid_kp, pid_ki, pid_kd)
+
+        y, control_inputs = closed_loop(n=N, steps=k, r=0.9, controller=controller)
+        control_inputs = [0] + control_inputs
+        plotter(y, control_inputs, f"{C} closed loop result")
