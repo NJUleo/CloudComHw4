@@ -221,7 +221,9 @@ def plotter(y, control_input, label):
     axs[1].set_xlabel("time steps")
     axs[1].set_ylabel("control input")
 
-    axs[2].plot(x_values, control_input, "tab:green")
+    server_num = [max(0, int(round(u))) for u in control_input]
+
+    axs[2].plot(x_values, server_num, "tab:green")
     axs[2].set_title("number of servers vs time steps")
     axs[2].set_xlabel("number of servers")
     axs[2].set_ylabel("time steps")
